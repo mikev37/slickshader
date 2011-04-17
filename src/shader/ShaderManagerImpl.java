@@ -22,7 +22,9 @@ class ShaderResourceManagerImpl implements ShaderResourceManager{
   
   
   //Constructor
-  private ShaderResourceManagerImpl(){}
+  private ShaderResourceManagerImpl(){
+    //Private Constructor to prevent external extension
+  }
   
   
   

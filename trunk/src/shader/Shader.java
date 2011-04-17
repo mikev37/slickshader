@@ -60,7 +60,7 @@ public class Shader {
       GL20.glLinkProgram(programID);
       if(!linkedSuccessfully()){
         errorMessage.append("Linking Error\n");
-        errorMessage.append(getProgramInfoLog(programID));
+        errorMessage.append(getProgramInfoLog());
         errorMessage.append("\n\n");
       }
       
@@ -187,7 +187,7 @@ public class Shader {
   
   
   
-  private String getProgramInfoLog(int programID){
+  private String getProgramInfoLog(){
     return GL20.glGetProgramInfoLog(programID, logging).trim();
   }
   

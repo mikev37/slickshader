@@ -9,6 +9,15 @@ import org.newdawn.slick.SlickException;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.renderer.SGL;
 
+/**
+ * Class to support the concept of a single artifact being
+ * comprised of multiple image resources.</br>
+ * For example a colourmap, normalmap, diffusemap, and specularmap.
+ * This is currently extremely buggy, and I don't know why some
+ * things have to be the way the are. 
+ * @author Chronocide (Jeremy Klix)
+ *
+ */
 public class MultiTex implements Renderable{
 
   public Texture tex1;

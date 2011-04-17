@@ -16,7 +16,11 @@ import shader.MultiTex;
 import shader.Shader;
 
 
-
+/**
+ * Simple example/test class for shader support stuff. 
+ * @author Chronocide (Jeremy Klix)
+ *
+ */
 public class Example extends BasicGame{
   
   private Shader mandelbrot;

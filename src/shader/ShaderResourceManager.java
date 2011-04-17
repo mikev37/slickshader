@@ -1,7 +1,11 @@
 package shader;
 
 
-
+/**
+ * Simply interface for component that manages shaders source files.
+ * @author Chronocide (Jeremy Klix)
+ *
+ */
 public interface ShaderResourceManager{
   
   

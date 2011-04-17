@@ -10,7 +10,7 @@ import org.lwjgl.opengl.GL20;
 /**
  * A simple class used to prevent duplicate shaders from
  * being loaded and compiled onto the video card.</br>
- * @author Chronocide
+ * @author Chronocide (Jeremy Klix)
  */
 class ShaderResourceManagerImpl implements ShaderResourceManager{
   private static final ShaderResourceManager srm = new ShaderResourceManagerImpl();

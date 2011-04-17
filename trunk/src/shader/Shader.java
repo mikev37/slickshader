@@ -11,6 +11,12 @@ import org.lwjgl.opengl.GL20;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.util.ResourceLoader;
 
+/**
+ * Class used to use and access shaders without having to deal
+ * with all of the fidly openGL bits.
+ * @author Chronocide (Jeremy Klix)
+ *
+ */
 public class Shader {
   public static final int BRIEF = 128;
   public static final int MODERATE = 512;

@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -24,6 +25,7 @@ public class Shader {
   public static final int MODERATE = 512;
   public static final int VERBOSE = 1024;
   private static int logging = MODERATE;
+  private static int NOT_LOADED = -1;
   
   private ShaderResourceManager srm;
   
@@ -32,7 +34,7 @@ public class Shader {
    * -1 only before construction is completed, or
    * after the <tt>Shader</tt> is deleted
    */
-  private int programID = -1;
+  private int programID = NOT_LOADED;
   
   
   
@@ -225,7 +227,7 @@ public class Shader {
    */
   public void deleteShader(){
     srm.removeProgram(programID);
-    programID = -1;
+    programID = NOT_LOADED;
   }
   
   
@@ -235,7 +237,7 @@ public class Shader {
    * @return true if this <tt>Shader</tt> has been deleted.</br>
    */
   public boolean isDeleted(){
-    return programID == -1;
+    return programID == NOT_LOADED;
   }
   
   
@@ -244,7 +246,7 @@ public class Shader {
    * Activates the shader.</br>
    */
   public void startShader(){
-    if(programID == -1){
+    if(programID == NOT_LOADED){
       throw new IllegalStateException("Cannot start shader; this" +
                                       " Shader has been deleted");
     }
@@ -254,6 +256,12 @@ public class Shader {
   
   
   
+//UNIFORM SETTERS
+  //TODO figure out if there is any practical way to ensure that
+  //the setter type used matches the variable name passed in.
+  //That is if a they are calling setUnifromVariable1f on shader
+  //variable "offset" offset really is a float.
+  
   /**
    * Sets the value of the uniform integer Variable <tt>name</tt>.</br>
    * @param name the variable to set.
@@ -262,10 +270,7 @@ public class Shader {
   public void setUniform1iVariable(String name, int value){
     CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
-    if(location==-1){
-      System.err.println("Warning: variable " + name + " could " +
-          "not be found. Ensure the name is spelled correctly");
-    }
+    locationCheck(location, name);
     GL20.glUniform1i(location, value);
   }
 
@@ -279,11 +284,19 @@ public class Shader {
   public void setUniform1fVariable(String name, float value){
     CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
-    if(location==-1){
-      System.err.println("Warning: variable " + name + " could " +
-      		"not be found. Ensure the name is spelled correctly");
-    }
+    locationCheck(location, name);
     GL20.glUniform1f(location, value);
+  }
+  
+  
+  
+  public void setUniform2iVariable(String name,
+                                   int v0,
+                                   int v1){
+    CharSequence param = new StringBuffer(prepareStringVariable(name));
+    int location = GL20.glGetUniformLocation(programID, param);
+    locationCheck(location, name);
+    GL20.glUniform2i(location, v0, v1);
   }
   
   
@@ -293,7 +306,118 @@ public class Shader {
                                    float v1){
     CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
+    locationCheck(location, name);
     GL20.glUniform2f(location, v0, v1);
+  }
+  
+  
+  
+  public void setUniform3iVariable(String name,
+                                   int v0,
+                                   int v1,
+                                   int v2){
+    CharSequence param = new StringBuffer(prepareStringVariable(name));
+    int location = GL20.glGetUniformLocation(programID, param);
+    locationCheck(location, name);
+    GL20.glUniform3i(location, v0, v1, v2);
+  }
+  
+  
+  
+  public void setUniform3fVariable(String name,
+                                   float v0,
+                                   float v1,
+                                   float v2){
+    CharSequence param = new StringBuffer(prepareStringVariable(name));
+    int location = GL20.glGetUniformLocation(programID, param);
+    locationCheck(location, name);
+    GL20.glUniform3f(location, v0, v1, v2);
+  }
+  
+  
+  
+  public void setUniform3iVariable(String name,
+                                   int v0,
+                                   int v1,
+                                   int v2,
+                                   int v3){
+    CharSequence param = new StringBuffer(prepareStringVariable(name));
+    int location = GL20.glGetUniformLocation(programID, param);
+    locationCheck(location, name);
+    GL20.glUniform4i(location, v0, v1, v2, v3);
+  }
+  
+  
+  
+  public void setUniform4fVariable(String name,
+                                   float v0,
+                                   float v1,
+                                   float v2,
+                                   float v3){
+    CharSequence param = new StringBuffer(prepareStringVariable(name));
+    int location = GL20.glGetUniformLocation(programID, param);
+    locationCheck(location, name);
+    GL20.glUniform4f(location, v0, v1, v2, v3);
+  }
+  
+  
+  
+  //TODO test
+  public void setUniformMatrix(String name,
+                               boolean transpose,
+                               float[][] matrix){
+    //Convert matrix format
+    FloatBuffer matBuffer = matrixPrepare(matrix);
+    
+    //Get uniform location
+    CharSequence param = new StringBuffer(prepareStringVariable(name));
+    int location = GL20.glGetUniformLocation(programID, param);
+    locationCheck(location, name);
+
+    //determine correct matrixSetter
+    switch(matrix.length){
+      case 2: GL20.glUniformMatrix2(location, transpose, matBuffer);
+      break;
+      case 3: GL20.glUniformMatrix3(location, transpose, matBuffer);
+      break;
+      case 4: GL20.glUniformMatrix4(location, transpose, matBuffer);
+      break;
+    }
+  }
+  
+  
+  
+  private FloatBuffer matrixPrepare(float[][] matrix){
+    //Check argument validity
+    if(matrix==null){
+      throw new IllegalArgumentException("The matrix may not be null");
+    }
+    int row = matrix.length;
+    if(row<2){
+      throw new IllegalArgumentException("The matrix must have at least 2 rows.");
+    }
+    int col = matrix[0].length;
+    if(col!=row){
+      throw new IllegalArgumentException("The matrix must have an equal number of rows and columns.");
+    }
+    float[] unrolled = new float[row*col];
+    
+    for(int i=0;i<row;i++){
+      for(int j=0;j<col;j++){
+        unrolled[i*col+j] = matrix[i][j];
+      }
+    }
+    
+    return FloatBuffer.wrap(unrolled);
+  }
+  
+  
+  
+  private void locationCheck(int location, String varName){
+    if(location==-1){
+      System.err.println("Warning: variable " + varName + " could " +
+          "not be found. Ensure the name is spelled correctly");
+    }
   }
   
   

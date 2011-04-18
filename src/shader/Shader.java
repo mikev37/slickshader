@@ -25,7 +25,7 @@ public class Shader {
   public static final int MODERATE = 512;
   public static final int VERBOSE = 1024;
   private static int logging = MODERATE;
-  private static int NOT_LOADED = -1;
+  private static final int NOT_LOADED = -1;
   
   private ShaderResourceManager srm;
   
@@ -223,7 +223,7 @@ public class Shader {
   /**
    * Deletes this shader and unloads all free resources.</br>
    * TODO should this be called from <tt>finalise()</tt>, or is that just
-   * asking for trouble
+   * asking for trouble?
    */
   public void deleteShader(){
     srm.removeProgram(programID);
@@ -277,7 +277,8 @@ public class Shader {
   
   
   /**
-   * Sets the value of the uniform integer Variable <tt>name</tt>.</br>
+   * Sets the value of the uniform integer Variable
+   * <tt>name</tt>.</br>
    * @param name the variable to set.
    * @param value the value to be set.
    */
@@ -290,9 +291,7 @@ public class Shader {
   
   
   
-  public void setUniform2iVariable(String name,
-                                   int v0,
-                                   int v1){
+  public void setUniform2iVariable(String name, int v0, int v1){
     CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
     locationCheck(location, name);
@@ -302,8 +301,7 @@ public class Shader {
   
   
   public void setUniform2fVariable(String name,
-                                   float v0,
-                                   float v1){
+                                   float v0, float v1){
     CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
     locationCheck(location, name);
@@ -313,9 +311,7 @@ public class Shader {
   
   
   public void setUniform3iVariable(String name,
-                                   int v0,
-                                   int v1,
-                                   int v2){
+                                   int v0, int v1, int v2){
     CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
     locationCheck(location, name);
@@ -325,9 +321,7 @@ public class Shader {
   
   
   public void setUniform3fVariable(String name,
-                                   float v0,
-                                   float v1,
-                                   float v2){
+                                   float v0, float v1, float v2){
     CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
     locationCheck(location, name);
@@ -337,10 +331,7 @@ public class Shader {
   
   
   public void setUniform3iVariable(String name,
-                                   int v0,
-                                   int v1,
-                                   int v2,
-                                   int v3){
+                                   int v0, int v1, int v2, int v3){
     CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
     locationCheck(location, name);
@@ -350,10 +341,8 @@ public class Shader {
   
   
   public void setUniform4fVariable(String name,
-                                   float v0,
-                                   float v1,
-                                   float v2,
-                                   float v3){
+                                   float v0, float v1,
+                                   float v2, float v3){
     CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
     locationCheck(location, name);
@@ -362,7 +351,7 @@ public class Shader {
   
   
   
-  //TODO test
+  //TODO Test
   public void setUniformMatrix(String name,
                                boolean transpose,
                                float[][] matrix){
@@ -472,7 +461,7 @@ public class Shader {
    * @param filename the full name of the file.
    * @return a ByteBuffer containing the program code.
    * @throws SlickException
-   * TODO delete: depended on by constructor
+   * TODO delete: depended on by deprecated constructor
    */
   private ByteBuffer getProgramCode(String filename)throws SlickException{
     InputStream fileInputStream = null;
@@ -480,12 +469,12 @@ public class Shader {
         
     fileInputStream = ResourceLoader.getResourceAsStream(filename);
     DataInputStream dataStream = new DataInputStream(fileInputStream);
-    try {
-    dataStream.readFully(shaderCode = new byte[fileInputStream.available()]);
-    fileInputStream.close();
-    dataStream.close();
-    } catch (IOException e) {
-    throw new SlickException(e.getMessage());
+    try{
+      dataStream.readFully(shaderCode = new byte[fileInputStream.available()]);
+      fileInputStream.close();
+      dataStream.close();
+    }catch (IOException e) {
+      throw new SlickException(e.getMessage());
     }
 
  

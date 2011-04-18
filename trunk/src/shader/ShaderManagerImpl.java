@@ -20,7 +20,7 @@ import org.newdawn.slick.util.ResourceLoader;
  * @author Chronocide (Jeremy Klix)
  */
 class ShaderResourceManagerImpl implements ShaderResourceManager{
-  private static final ShaderResourceManager srm = new ShaderResourceManagerImpl();
+  private static final ShaderResourceManager SRM = new ShaderResourceManagerImpl();
 
   
   private Map<String, Integer> shaderMap = new HashMap<String, Integer>();
@@ -37,7 +37,7 @@ class ShaderResourceManagerImpl implements ShaderResourceManager{
   
   //Factory Method
   static ShaderResourceManager getSRM(){
-    return srm;
+    return SRM;
   }
   
   
@@ -129,6 +129,8 @@ class ShaderResourceManagerImpl implements ShaderResourceManager{
    * After calling this method the program specified will no longer
    * be loaded, nor will any shaders that were still in use only by
    * only that program.</br>
+   * 
+   * @params programID the ID of the program to remove.
    */
   //This is a rather inefficient implementation however, it need not
   //be fast and this representation is very simple to follow and
@@ -157,15 +159,15 @@ class ShaderResourceManagerImpl implements ShaderResourceManager{
     }
     
     //Delete Program
-    GL20.glDeleteProgram(programID); //Delete program
+    GL20.glDeleteProgram(programID);
     programToShaders.remove(programID);
   }
   
   
   
   /**
-   * Gets the program code from the file "filename" and puts in into a 
-   * byte buffer.
+   * Gets the program code from the file <tt>filename</tt> and puts
+   * it into a <tt>ByteBuffer</tt>.</br>
    * @param filename the full name of the file.
    * @return a ByteBuffer containing the program code.
    * @throws SlickException

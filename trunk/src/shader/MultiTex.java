@@ -31,7 +31,7 @@ public class MultiTex implements Renderable{
   
   public MultiTex(String t1, String t2)throws SlickException{
     //TODO bypass making an Image by the using the
-    //InternalTextureLoader directly
+    //InternalTextureLoader directly.
     //TODO make this take an indexed collection of strings. Note
     //the collection index must correspond to the textureUnit the
     //resource is bound to.

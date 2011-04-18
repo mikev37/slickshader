@@ -130,8 +130,8 @@ public class Example extends BasicGame{
 
     
     julia.startShader();
-      julia.setUniformFVariable("cX\0", cX/zoom + dx);
-      julia.setUniformFVariable("cY\0", cY/zoom + dy);
+      julia.setUniform1fVariable("cX\0", cX/zoom + dx);
+      julia.setUniform1fVariable("cY\0", cY/zoom + dy);
       GL11.glBegin(GL11.GL_QUADS);
         GL11.glTexCoord2f(-1.75f, 1.5f);
         GL11.glVertex3f(quad2[0],  quad2[1],  quad2[2]);
@@ -151,13 +151,13 @@ public class Example extends BasicGame{
     
     
     wave.startShader();
-      wave.setUniformFVariable("offset\0", shift);
+      wave.setUniform1fVariable("offset", shift);
       img.draw(800,500);
     
       multi.startShader();
-        multi.setUniform2fVariable("lighting\0", (mx-200)/200.00f, (my-20)/200.0f);
-        multi.setUniformIVariable("colorMap\0", 0);
-        multi.setUniformIVariable("normalMap\0", 1);
+        multi.setUniform2fVariable("lighting", (mx-200)/200.00f, (my-20)/200.0f);
+        multi.setUniform1iVariable("colorMap\0", 0);
+        multi.setUniform1iVariable("normalMap\0", 1);
         img2.draw(200, 20);
 
     Shader.forceFixedShader();

@@ -131,10 +131,13 @@ public class Shader {
    * @param name the variable to set.
    * @param value the value to be set.
    */
-  public void setUniformIVariable(String name, int value){
-    CharSequence param = new StringBuffer(name);
+  public void setUniform1iVariable(String name, int value){
+    CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
-    
+    if(location==-1){
+      System.err.println("Warning: variable " + name + " could " +
+          "not be found. Ensure the name is spelled correctly");
+    }
     GL20.glUniform1i(location, value);
   }
 
@@ -147,10 +150,13 @@ public class Shader {
    * @param name the variable to set.
    * @param value the value to be set.
    */
-  public void setUniformFVariable(String name, float value){
-    CharSequence param = new StringBuffer(name);
+  public void setUniform1fVariable(String name, float value){
+    CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
-    
+    if(location==-1){
+      System.err.println("Warning: variable " + name + " could " +
+      		"not be found. Ensure the name is spelled correctly");
+    }
     GL20.glUniform1f(location, value);
   }
   
@@ -159,9 +165,10 @@ public class Shader {
   public void setUniform2fVariable(String name,
                                    float v0,
                                    float v1){
-    CharSequence param = new StringBuffer(name);
+    CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
     GL20.glUniform2f(location, v0, v1);
+    
   }
   
   
@@ -174,6 +181,13 @@ public class Shader {
     return GL20.glGetShader(shaderID, GL20.GL_COMPILE_STATUS)==GL11.GL_TRUE;
   }
   
+  
+  private String prepareStringVariable(String name){
+    if(name.endsWith("\0")){
+      return name;
+    }
+    return name+"\0";
+  }
   
   
   /**

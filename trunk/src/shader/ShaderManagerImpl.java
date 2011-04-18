@@ -1,11 +1,18 @@
 package shader;
 
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL20;
+import org.newdawn.slick.SlickException;
+import org.newdawn.slick.util.ResourceLoader;
 
 /**
  * A simple class used to prevent duplicate shaders from
@@ -42,11 +49,14 @@ class ShaderResourceManagerImpl implements ShaderResourceManager{
    * @param fragmentFileName the fragment shader to fetch an id for.
    * @returns shaderID for a given fragment shader.</br>
    */
-  public int getFragementShaderID(String fragmentFileName){
+  public int getFragementShaderID(String fragmentFileName)throws SlickException{
     Integer id = shaderMap.get(fragmentFileName);
     if(id==null){
       id = GL20.glCreateShader(GL20.GL_FRAGMENT_SHADER);
       shaderMap.put(fragmentFileName, id);
+      
+      GL20.glShaderSource(id, getProgramCode(fragmentFileName));
+      GL20.glCompileShader(id);
     }
     return id;
   }
@@ -60,11 +70,14 @@ class ShaderResourceManagerImpl implements ShaderResourceManager{
    * @param vertexFileName the vertex shader to fetch an id for.
    * @returns shaderID for a given vertex shader.</br>
    */
-  public int getVertexShaderID(String vertexFileName){
+  public int getVertexShaderID(String vertexFileName)throws SlickException{
     Integer id = shaderMap.get(vertexFileName);
     if(id==null){
       id = GL20.glCreateShader(GL20.GL_VERTEX_SHADER);
       shaderMap.put(vertexFileName, id);
+      
+      GL20.glShaderSource(id, getProgramCode(vertexFileName));
+      GL20.glCompileShader(id);
     }
     return id;
   }
@@ -146,6 +159,37 @@ class ShaderResourceManagerImpl implements ShaderResourceManager{
     //Delete Program
     GL20.glDeleteProgram(programID); //Delete program
     programToShaders.remove(programID);
+  }
+  
+  
+  
+  /**
+   * Gets the program code from the file "filename" and puts in into a 
+   * byte buffer.
+   * @param filename the full name of the file.
+   * @return a ByteBuffer containing the program code.
+   * @throws SlickException
+   */
+  private ByteBuffer getProgramCode(String filename)throws SlickException{
+    InputStream fileInputStream = null;
+    byte[] shaderCode = null;
+        
+    fileInputStream = ResourceLoader.getResourceAsStream(filename);
+    DataInputStream dataStream = new DataInputStream(fileInputStream);
+    try{
+      dataStream.readFully(shaderCode = new byte[fileInputStream.available()]);
+      fileInputStream.close();
+      dataStream.close();
+    }catch (IOException e) {
+      throw new SlickException(e.getMessage());
+    }
+
+    ByteBuffer shaderPro = BufferUtils.createByteBuffer(shaderCode.length);
+
+    shaderPro.put(shaderCode);
+    shaderPro.flip();
+
+    return shaderPro;
   }
   
 }

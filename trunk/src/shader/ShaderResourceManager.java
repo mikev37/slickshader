@@ -1,5 +1,7 @@
 package shader;
 
+import org.newdawn.slick.SlickException;
+
 
 /**
  * Simply interface for component that manages shaders source files.
@@ -8,14 +10,9 @@ package shader;
  */
 public interface ShaderResourceManager{
   
+  int getFragementShaderID(String fragmentFileName)throws SlickException;
   
-  int getFragementShaderID(String fragmentFileName);
-  
-  
-  
-  int getVertexShaderID(String vertexFileName);
-  
- 
+  int getVertexShaderID(String vertexFileName)throws SlickException;
   
   /**
    * Link a shader that the shader program depends on to operate.</br>
@@ -23,7 +20,6 @@ public interface ShaderResourceManager{
    * @param shaderID
    */
   void createProgramShaderDependancy(int programID, int shaderID);
-  
   
   void removeProgram(int programID);
 }

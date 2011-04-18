@@ -4,6 +4,8 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -21,12 +23,31 @@ public class Shader {
   public static final int BRIEF = 128;
   public static final int MODERATE = 512;
   public static final int VERBOSE = 1024;
-
   private static int logging = MODERATE;
   
   private ShaderResourceManager srm;
-  private int programID = -1; //ID of the compiled Shader program
   
+  /**
+   * ID of the <tt>Shader</tt>.  A Shader may have programID of 
+   * -1 only before construction is completed, or
+   * after the <tt>Shader</tt> is deleted
+   */
+  private int programID = -1;
+  
+  
+  
+  /**
+   * @Deprecated use for testing only.
+   * Private constructor used to guard against external extension.
+   * While determining how extensions should work.</br>
+   * @param srm
+   * @param vertexFileName
+   * @param fragmentFileName
+   * @throws SlickException
+   * TODO needs testing to ensure that cleaning up after failed,
+   * shaders works. 
+   * TODO delete
+   */
   private Shader(ShaderResourceManager srm,
                  String vertexFileName,
                  String fragmentFileName) throws SlickException{
@@ -80,6 +101,80 @@ public class Shader {
   
   
   
+  private Shader(ShaderResourceManager srm,
+                 Collection<String> vertex,
+                 Collection<String> fragment)throws SlickException{
+    this.srm = srm;
+    StringBuilder errorMessage = new StringBuilder();
+    
+    programID = GL20.glCreateProgram();
+    
+    int[] shaderIds = new int[vertex.size() + fragment.size()];
+    int index = 0;
+    
+    //Load Vertex Shaders
+    for(String vertShader: vertex){
+      int vsid = srm.getVertexShaderID(vertShader);
+      srm.createProgramShaderDependancy(programID, vsid);
+      
+      //Add to shader ids array
+      shaderIds[index] = vsid;
+      index++;
+      
+      //Check for errors with shader
+      if(!compiledSuccessfully(vsid)){
+        errorMessage.append("Vertex Shader ");
+        errorMessage.append(vertShader);
+        errorMessage.append(" failed to compile.\n");
+        errorMessage.append(getShaderInfoLog(vsid));
+        errorMessage.append("\n\n");
+      }
+    }
+    
+    
+    //Load Fragment Shaders
+    for(String fragShader: fragment){
+      int fsid = srm.getFragementShaderID(fragShader);
+      srm.createProgramShaderDependancy(programID, fsid);
+
+      //Add to shader ids array
+      shaderIds[index] = fsid;
+      index++;
+      
+      //Check for errors with shader
+      if(!compiledSuccessfully(fsid)){
+        errorMessage.append("Fragment Shader ");
+        errorMessage.append(fragShader);
+        errorMessage.append(" failed to compile.\n");
+        errorMessage.append(getShaderInfoLog(fsid));
+        errorMessage.append("\n\n");
+      }
+    }
+    
+    //Attach shaders to program
+    for(int i=0; i<index; i++){
+      GL20.glAttachShader(programID, shaderIds[i]);
+    }
+    //Link program
+    GL20.glLinkProgram(programID);
+    if(!linkedSuccessfully()){
+      errorMessage.append("Linking Error\n");
+      errorMessage.append(getProgramInfoLog());
+      errorMessage.append("\n\n");
+    }
+    
+    if(errorMessage.length()!=0){
+      errorMessage.insert(0, "Could not compile shader.\n");
+      srm.removeProgram(programID);
+      programID = -1;
+      errorMessage.append("Stack Trace:");
+      throw new SlickException(errorMessage.toString());
+    }
+    
+  }
+  
+  
+  
   /**
    * Factory method to create a new Shader.
    * @param vertexFileName
@@ -89,16 +184,58 @@ public class Shader {
    */
   public static Shader makeShader(String vertexFileName,
                                   String fragmentFileName)throws SlickException{
+    ArrayList<String> l1 = new ArrayList<String>();
+    l1.add(vertexFileName);
+    ArrayList<String> l2 = new ArrayList<String>();
+    l2.add(fragmentFileName);
+    
     return new Shader(ShaderResourceManagerImpl.getSRM(),
-                      vertexFileName,
-                      fragmentFileName);
+                      l1,
+                      l2);
+  }
+  
+  
+  
+  /**
+   * Reverts GL context back to the fixed pixel pipeline.<br>
+   */
+  public static void forceFixedShader(){
+    GL20.glUseProgram(0);
+  }
+  
+  
+  
+  /**
+   * Sets the number of characters to be returned when printing
+   * errors.</br>  Suggested values are the constants
+   * <tt>BRIEF</tt>, <tt>MODERATE</tt>, and <tt>VERBOSE</tt>.</br>
+   * @param detailLevel number of characters to display for error
+   *                    messages.
+   */
+  public static void setLoggingDetail(int detailLevel){
+    logging = detailLevel;
   }
 
   
   
+  /**
+   * Deletes this shader and unloads all free resources.</br>
+   * TODO should this be called from <tt>finalise()</tt>, or is that just
+   * asking for trouble
+   */
   public void deleteShader(){
     srm.removeProgram(programID);
     programID = -1;
+  }
+  
+  
+  
+  /**
+   * Returns true if this <tt>Shader</tt> has been deleted.</br>
+   * @return true if this <tt>Shader</tt> has been deleted.</br>
+   */
+  public boolean isDeleted(){
+    return programID == -1;
   }
   
   
@@ -118,15 +255,6 @@ public class Shader {
   
   
   /**
-   * Reverts GL context back to the fixed pixel pipeline.<br>
-   */
-  public static void forceFixedShader(){
-    GL20.glUseProgram(0);
-  }
-  
-  
-  
-  /**
    * Sets the value of the uniform integer Variable <tt>name</tt>.</br>
    * @param name the variable to set.
    * @param value the value to be set.
@@ -141,8 +269,6 @@ public class Shader {
     GL20.glUniform1i(location, value);
   }
 
-  
-  
   
   
   /**
@@ -168,8 +294,8 @@ public class Shader {
     CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
     GL20.glUniform2f(location, v0, v1);
-    
   }
+  
   
   
   /**
@@ -182,12 +308,14 @@ public class Shader {
   }
   
   
+  
   private String prepareStringVariable(String name){
     if(name.endsWith("\0")){
       return name;
     }
     return name+"\0";
   }
+  
   
   
   /**
@@ -214,11 +342,13 @@ public class Shader {
   
   
   /**
+   * @Deprecated
    * Gets the program code from the file "filename" and puts in into a 
    * byte buffer.
    * @param filename the full name of the file.
    * @return a ByteBuffer containing the program code.
    * @throws SlickException
+   * TODO delete: depended on by constructor
    */
   private ByteBuffer getProgramCode(String filename)throws SlickException{
     InputStream fileInputStream = null;

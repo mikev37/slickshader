@@ -150,16 +150,18 @@ public class Example extends BasicGame{
     g.scale(1.0f/400.0f, 1.0f/400.0f);
     
     
+
+    
+    multi.startShader();
+      multi.setUniform2fVariable("lighting", (mx-400)/200.00f, (my-20)/200.0f);
+      multi.setUniform1iVariable("colorMap\0", 0);
+      multi.setUniform1iVariable("normalMap\0", 1);
+      img2.draw(400, 20);
+
     wave.startShader();
       wave.setUniform1fVariable("offset", shift);
-      img.draw(800,500);
-    
-      multi.startShader();
-        multi.setUniform2fVariable("lighting", (mx-200)/200.00f, (my-20)/200.0f);
-        multi.setUniform1iVariable("colorMap\0", 0);
-        multi.setUniform1iVariable("normalMap\0", 1);
-        img2.draw(200, 20);
-
+      img.draw(1000,600);
+        
     Shader.forceFixedShader();
 
   }

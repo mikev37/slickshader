@@ -30,12 +30,16 @@ import org.newdawn.slick.opengl.renderer.SGL;
 //TODO Way of handling images larger then the supporting cards
 //max texture size ala Slicks BigImage class.
 //TODO Needs way more attention to documenting inheritance.
+//TODO Test using different numbers of textures.
 public class MultiTex implements Renderable{
   private static int units = -1; 
   
   public List<Texture> textures;
   
-  
+  //Width and height based off first texture loaded
+  private float imgWidth, imgHeight;
+  //Texture width and height clamped between 0 and 1 
+  private float texWidth, texHeight; 
   
   /**
    * Constructs a new <tt>MultiTex</tt> object using the textures
@@ -53,6 +57,7 @@ public class MultiTex implements Renderable{
     //Check how many texture units are supported 
     if(units==-1){
       units = GL11.glGetInteger(GL20.GL_MAX_TEXTURE_IMAGE_UNITS);
+      System.out.println(units);
     }
     if(units < textures.size()){
       throw new UnsupportedOperationException("You attempted to " +
@@ -85,6 +90,11 @@ public class MultiTex implements Renderable{
     
     //Reset current texture unit to 0
     GL13.glActiveTexture(GL13.GL_TEXTURE0);
+    
+    imgWidth  = this.textures.get(0).getImageWidth();
+    imgHeight = this.textures.get(0).getImageHeight();
+    texWidth  = this.textures.get(0).getWidth();
+    texHeight = this.textures.get(0).getHeight();
   }
   
   
@@ -105,55 +115,55 @@ public class MultiTex implements Renderable{
    * When extending please note that this method relies on the
    * private method drawEmbedded.</br>
    */
-  public void draw(float x, float y){
-    //TODO remove hard-coding 
-    //TODO change to using push and pop to avoid fp errors
+  public void draw(float x, float y){    
+    GL11.glPushMatrix();
     GL11.glTranslatef(x, y, 0);
     
-      GL13.glActiveTexture(GL13.GL_TEXTURE0);
-      GL11.glEnable(GL11.GL_TEXTURE_2D);
-      GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get(0).getTextureID());
+      //Bind textures to their correct locations
+      for(int i = 0; i < textures.size(); i++){
+        GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get(i).getTextureID());
+      }      
   
-      GL13.glActiveTexture(GL13.GL_TEXTURE1);
-      GL11.glEnable(GL11.GL_TEXTURE_2D);
-      GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get(1).getTextureID());
-      
-  
+      //Draw quad
       GL11.glBegin(SGL.GL_QUADS); 
-        drawEmbedded(0,0,
-                     textures.get(0).getImageWidth(),
-                     textures.get(0).getImageHeight()); 
+        drawEmbedded(); 
       GL11.glEnd(); 
     
-    GL11.glTranslatef(-x, -y, 0);
+    GL11.glPopMatrix();
     
     //Clean up texture setting to allow basic slick to operate correctly.
-    GL13.glActiveTexture(GL13.GL_TEXTURE1);
-    GL11.glDisable(GL11.GL_TEXTURE_2D);
-    GL13.glActiveTexture(GL13.GL_TEXTURE0);
-    GL11.glDisable(GL11.GL_TEXTURE_2D);
-    
+    for(int i = textures.size()-1; i>=0; i--){
+      GL13.glActiveTexture(GL13.GL_TEXTURE0+i);
+      GL11.glDisable(GL11.GL_TEXTURE_2D);
+    }
     GL11.glEnable(GL11.GL_TEXTURE_2D);
   }
 
 
   
-  private void drawEmbedded(int x, int y, int width, int height){
-    GL13.glMultiTexCoord2f(GL13.GL_TEXTURE0, 0, 0);
-    GL13.glMultiTexCoord2f(GL13.GL_TEXTURE1, 0, 0);
-    GL11.glVertex3f(x, y, 0);
+  private void drawEmbedded(){
+    //TODO reduce code duplication need to produce sequence 0,1,3,2
+    for(int i=0; i<textures.size(); i++){
+      GL13.glMultiTexCoord2f(GL13.GL_TEXTURE0 + i, 0, 0);
+    }
+    GL11.glVertex3f(0, 0, 0); 
     
-    GL13.glMultiTexCoord2f(GL13.GL_TEXTURE0, 0, 1);
-    GL13.glMultiTexCoord2f(GL13.GL_TEXTURE1, 0, 1);
-    GL11.glVertex3f(x, y + height, 0);
+    for(int i=0; i<textures.size(); i++){
+      GL13.glMultiTexCoord2f(GL13.GL_TEXTURE0 + i, 0, texHeight);
+    }
+    GL11.glVertex3f(0, imgHeight, 0);
     
-    GL13.glMultiTexCoord2f(GL13.GL_TEXTURE0, 1, 1);
-    GL13.glMultiTexCoord2f(GL13.GL_TEXTURE1, 1, 1);
-    GL11.glVertex3f(x + width, y + height, 0);
+    for(int i=0; i<textures.size(); i++){
+      GL13.glMultiTexCoord2f(GL13.GL_TEXTURE0 + i, texWidth, texHeight);
+    }
+    GL11.glVertex3f(imgWidth, imgHeight, 0);
     
-    GL13.glMultiTexCoord2f(GL13.GL_TEXTURE0, 1, 0);
-    GL13.glMultiTexCoord2f(GL13.GL_TEXTURE1, 1, 0);
-    GL11.glVertex3f(x + width, y, 0);
+    for(int i=0; i<textures.size(); i++){
+      GL13.glMultiTexCoord2f(GL13.GL_TEXTURE0 + i, texWidth, 0);
+    }
+    GL11.glVertex3f(imgWidth, 0, 0);
   }
   
 }

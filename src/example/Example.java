@@ -59,7 +59,7 @@ public class Example extends BasicGame{
     wave = Shader.makeShader("data/wave.vrt", "data/wave.frg");
     multi = Shader.makeShader("data/multiTex.vrt", "data/multiTex.frg");
     
-    img = new Image("data/base.png");
+    img = new Image("data/base.png"); 
     img2 = new MultiTex("data/base.png", "data/normal.png");
 
     

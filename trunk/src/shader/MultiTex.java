@@ -1,6 +1,7 @@
 package shader;
 
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -8,9 +9,9 @@ import java.util.List;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
-import org.newdawn.slick.Image;
 import org.newdawn.slick.Renderable;
 import org.newdawn.slick.SlickException;
+import org.newdawn.slick.opengl.InternalTextureLoader;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.renderer.SGL;
 
@@ -51,9 +52,6 @@ public class MultiTex implements Renderable{
    * than the maximum number of texture units.
    */
   public MultiTex(List<String> textures)throws SlickException{
-    //TODO bypass making an Image by the using the
-    //InternalTextureLoader directly.
-    
     //Check how many texture units are supported 
     if(units==-1){
       units = GL11.glGetInteger(GL20.GL_MAX_TEXTURE_IMAGE_UNITS);
@@ -69,13 +67,19 @@ public class MultiTex implements Renderable{
     //Create texture list
     this.textures = new ArrayList<Texture>(textures.size());
     
+    
+     
     //Load textures into texture list.
+    InternalTextureLoader itl = InternalTextureLoader.get();
     for(int i = 0; i<textures.size(); i++){
       GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
       GL11.glEnable(GL11.GL_TEXTURE_2D);
       try{
-        this.textures.add(new Image(textures.get(i)).getTexture());
-      }catch(SlickException e){
+        this.textures.add(itl.getTexture(textures.get(i),
+                                         false,
+                                         GL11.GL_LINEAR,
+                                         null));
+      }catch(IOException e){
         throw new SlickException(e.getMessage());
       }
       GL11.glDisable(GL11.GL_TEXTURE_2D);

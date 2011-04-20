@@ -5,6 +5,7 @@ package example;
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.AppGameContainer;
 import org.newdawn.slick.BasicGame;
+import org.newdawn.slick.Color;
 import org.newdawn.slick.GameContainer;
 import org.newdawn.slick.Graphics;
 import org.newdawn.slick.Image;
@@ -41,6 +42,8 @@ public class Example extends BasicGame{
   private float dx, dy = 0.0f;
   
   private float shift = 1.0f;
+  
+  private int corner = 0; 
   
   public Example(String title){
     super(title);
@@ -100,6 +103,26 @@ public class Example extends BasicGame{
       if(zoom<1.00f){
         zoom = 1.00f;
       }
+    }
+    
+    if(gc.getInput().isKeyDown(Input.KEY_0)){
+     corner = 0;
+    }else if(gc.getInput().isKeyDown(Input.KEY_1)){
+     corner = 1;
+    }else if(gc.getInput().isKeyDown(Input.KEY_2)){
+     corner = 2;
+    }else if(gc.getInput().isKeyDown(Input.KEY_3)){
+     corner = 3;
+    }
+      
+    if(gc.getInput().isKeyDown(Input.KEY_R)){
+      img2.setColour(corner, Color.red);
+    }else if(gc.getInput().isKeyDown(Input.KEY_G)){
+      img2.setColour(corner, Color.green);
+    }else if(gc.getInput().isKeyDown(Input.KEY_B)){
+      img2.setColour(corner, Color.blue);
+    }else if(gc.getInput().isKeyDown(Input.KEY_W)){
+      img2.setColour(corner, Color.white);
     }
     
     shift += delta/150.0f;
@@ -164,6 +187,7 @@ public class Example extends BasicGame{
         
     Shader.forceFixedShader();
 
+    g.drawString("Use [0] [1] [2] [3] to select corner\nUse [R] [G] [B] [W] to change colour", 400, 185);
   }
 
 

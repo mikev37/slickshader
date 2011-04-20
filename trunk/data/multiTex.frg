@@ -1,3 +1,4 @@
+varying vec4 gl_FrontColor;
 uniform sampler2D colorMap, normalMap;
 uniform vec2 lighting;
 
@@ -16,5 +17,5 @@ void main (void){
   vec3 vdiffuse = vec3(1.0,0.98,0.98)*diffuse;
    
   base.rgb = base.rgb*vdiffuse;
-  gl_FragColor = base;
+  gl_FragColor = base * gl_FrontColor;
 }

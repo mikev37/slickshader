@@ -9,11 +9,11 @@ import java.util.List;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
+import org.newdawn.slick.Color;
 import org.newdawn.slick.Renderable;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.opengl.InternalTextureLoader;
 import org.newdawn.slick.opengl.Texture;
-import org.newdawn.slick.opengl.renderer.SGL;
 
 /**
  * Class to support the concept of a single artifact being
@@ -23,6 +23,9 @@ import org.newdawn.slick.opengl.renderer.SGL;
  * things have to be the way the are. 
  * @author Chronocide (Jeremy Klix)
  *
+ *
+ * All drawing is done starting from the top left vertex and
+ * moving counter clockwise.</br>
  */
 //TODO Make interface feel a little more like the familiar Image class
 //TODO Determine a method of dealing with the case were textures
@@ -35,13 +38,33 @@ import org.newdawn.slick.opengl.renderer.SGL;
 public class MultiTex implements Renderable{
   private static int units = -1; 
   
-  public List<Texture> textures;
+  /** The top left corner identifier */
+  public static final int TOP_LEFT = 0;
+  /** The top right corner identifier */
+  public static final int BOTTOM_LEFT = 1;
+  /** The bottom left corner identifier */
+  public static final int BOTTOM_RIGHT = 3;
+  /** The bottom right corner identifier */
+  public static final int TOP_RIGHT = 2;
   
-  int primaryTextureIndex = 0;
+  
+  private List<Texture> textures;
+  
+  private int primaryTextureIndex = 0;
   //Width and height based off primary texture loaded
   private float imgWidth, imgHeight;
   //Primary texture width and height clamped between 0 and 1 
   private float texWidth, texHeight; 
+  
+  
+  private float[] normals = new float[]{0,0,1,
+                                        0,0,1,
+                                        0,0,1,
+                                        0,0,1};
+  private float[] colours = new float[]{1,1,1,1,
+                                        1,1,1,1,
+                                        1,1,1,1,
+                                        1,1,1,1};
   
   /**
    * Constructs a new <tt>MultiTex</tt> object using the textures
@@ -120,24 +143,45 @@ public class MultiTex implements Renderable{
    * When extending please note that this method relies on the
    * private method drawEmbedded.</br>
    */
-  public void draw(float x, float y){    
-    GL11.glPushMatrix();
-    GL11.glTranslatef(x, y, 0);
-    
-      //Bind textures to their correct locations
-      for(int i = 0; i < textures.size(); i++){
-        GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get(i).getTextureID());
-      }      
+  public void draw(float x, float y){
+      draw(x, y, x + imgWidth, y+imgHeight,
+           0, 0, imgWidth, imgHeight);
+
+  }
   
-      //Draw quad
-      GL11.glBegin(SGL.GL_QUADS); 
-        drawEmbedded(); 
-      GL11.glEnd(); 
+  
+  
+  /**
+   * Draw a section of this MultTex at a particular location and
+   * scale on the screen.</br>
+   * 
+   * This is the draw method that all other overloaded draw
+   * methods eventually evoke.</br>
+   * 
+   * @param x1
+   * @param y1
+   * @param x2
+   * @param y2
+   * @param sx1
+   * @param sy1
+   * @param sx2
+   * @param sy2
+   */
+  public void draw(float x1, float y1, float x2, float y2,
+                   float sx1, float sy1, float sx2, float sy2){
     
-    GL11.glPopMatrix();
+    //Bind textures to their correct locations
+    for(int i = 0; i < textures.size(); i++){
+      GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
+      GL11.glEnable(GL11.GL_TEXTURE_2D);
+      GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get(i).getTextureID());
+    }  
     
+    GL11.glBegin(GL11.GL_QUADS);
+      drawEmbedded(x1, y1, x2, y2,
+                   sx1, sy1, sx2, sy2);
+    GL11.glEnd();
+      
     //Clean up texture setting to allow basic slick to operate correctly.
     for(int i = textures.size()-1; i>=0; i--){
       GL13.glActiveTexture(GL13.GL_TEXTURE0+i);
@@ -145,30 +189,97 @@ public class MultiTex implements Renderable{
     }
     GL11.glEnable(GL11.GL_TEXTURE_2D);
   }
-
+  
+  
+  
+  public void draw(float x1, float y1, float x2, float y2,
+                   float sx1, float sy1, float sx2, float sy2,
+                   Color c){
+    float[] bu = colours;//Save the colour state
+    
+    setColour(c);
+    draw(x1, y1, x2, y2, sx1, sy1, sx2, sy2);
+    
+    colours = bu;//Restore the colour state
+  }
 
   
-  private void drawEmbedded(){
-    //TODO reduce code duplication need to produce sequence 0,1,3,2
-    for(int i=0; i<textures.size(); i++){
-      GL13.glMultiTexCoord2f(GL13.GL_TEXTURE0 + i, 0, 0);
-    }
-    GL11.glVertex3f(0, 0, 0); 
-    
-    for(int i=0; i<textures.size(); i++){
-      GL13.glMultiTexCoord2f(GL13.GL_TEXTURE0 + i, 0, texHeight);
-    }
-    GL11.glVertex3f(0, imgHeight, 0);
-    
-    for(int i=0; i<textures.size(); i++){
-      GL13.glMultiTexCoord2f(GL13.GL_TEXTURE0 + i, texWidth, texHeight);
-    }
-    GL11.glVertex3f(imgWidth, imgHeight, 0);
-    
-    for(int i=0; i<textures.size(); i++){
-      GL13.glMultiTexCoord2f(GL13.GL_TEXTURE0 + i, texWidth, 0);
-    }
-    GL11.glVertex3f(imgWidth, 0, 0);
+  
+  /**
+   * Sets the colour of a given corner.</br>
+   * Note that this will have an effect only if: the
+   * fixed pixel pipeline is being used; or the applied shader
+   * takes the vertex colour into account.</br>  
+   * @param corner
+   * @param c
+   */
+  public void setColour(int corner, Color c){
+    colours[corner*4 + 0] = c.r;
+    colours[corner*4 + 1] = c.g;
+    colours[corner*4 + 2] = c.b;
+    colours[corner*4 + 3] = c.a;
   }
+  
+  
+  
+  /**
+   * Sets the colour of all four corners.</br>
+   * @see setColour
+   * @param c
+   */
+  public void setColour(Color c){
+    for(int i=0; i<4; i++){
+      setColour(i, c);
+    }
+  }
+
+  
+  
+  private void drawEmbedded(float x1, float y1, float x2, float y2,
+                            float sx1, float sy1, float sx2, float sy2){
+    //TODO reduce code duplication need to produce sequence 0,1,3,2
+
+    //TOP LEFT
+    for(int i=0; i<textures.size(); i++){
+      GL13.glMultiTexCoord2f(GL13.GL_TEXTURE0 + i,
+                             (sx1/imgWidth) * texWidth,
+                             (sy1/imgHeight)* texHeight);
+    }
+    GL11.glColor4f(colours[0], colours[1], colours[2], colours[3]);
+    GL11.glNormal3f(normals[0], normals[1], normals[2]);
+    GL11.glVertex3f(x1, y1, 0); 
+    
+    //BOTTOM LEFT
+    for(int i=0; i<textures.size(); i++){
+      GL13.glMultiTexCoord2f(GL13.GL_TEXTURE0 + i,
+                             (sx1/imgWidth) * texWidth,
+                             (sy2/imgHeight)* texHeight);
+    }
+    GL11.glColor4f(colours[3], colours[5], colours[6], colours[7]);
+    GL11.glNormal3f(normals[3], normals[4], normals[5]);
+    GL11.glVertex3f(x1, y2, 0); 
+    
+    //BOTTOM RIGHT
+    for(int i=0; i<textures.size(); i++){
+      GL13.glMultiTexCoord2f(GL13.GL_TEXTURE0 + i,
+                             (sx2/imgWidth) * texWidth,
+                             (sy2/imgHeight)* texHeight);
+    }
+    GL11.glColor4f(colours[8], colours[9], colours[10], colours[11]);
+    GL11.glNormal3f(normals[6], normals[7], normals[8]);
+    GL11.glVertex3f(x2, y2, 0); 
+    
+    //TOP RIGHT
+    for(int i=0; i<textures.size(); i++){
+      GL13.glMultiTexCoord2f(GL13.GL_TEXTURE0 + i,
+                             (sx2/imgWidth) * texWidth,
+                             (sy1/imgHeight)* texHeight);
+    }
+    GL11.glColor4f(colours[12], colours[13], colours[14], colours[15]);
+    GL11.glNormal3f(normals[9], normals[10], normals[11]);
+    GL11.glVertex3f(x2, y1, 0); 
+  }
+
+
   
 }

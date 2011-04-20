@@ -19,6 +19,7 @@ import org.newdawn.slick.util.ResourceLoader;
  * with all of the fidly openGL bits.
  * @author Chronocide (Jeremy Klix)
  *
+ *TODO have set methods return reference to self for easy chaining
  */
 public class Shader {
   public static final int BRIEF = 128;

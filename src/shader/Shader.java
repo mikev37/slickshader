@@ -19,7 +19,6 @@ import org.newdawn.slick.util.ResourceLoader;
  * with all of the fidly openGL bits.
  * @author Chronocide (Jeremy Klix)
  *
- *TODO have set methods return reference to self for easy chaining
  */
 public class Shader {
   public static final int BRIEF = 128;
@@ -268,11 +267,12 @@ public class Shader {
    * @param name the variable to set.
    * @param value the value to be set.
    */
-  public void setUniform1iVariable(String name, int value){
+  public Shader setUniform1iVariable(String name, int value){
     CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
     locationCheck(location, name);
     GL20.glUniform1i(location, value);
+    return this;
   }
 
   
@@ -283,77 +283,85 @@ public class Shader {
    * @param name the variable to set.
    * @param value the value to be set.
    */
-  public void setUniform1fVariable(String name, float value){
+  public Shader setUniform1fVariable(String name, float value){
     CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
     locationCheck(location, name);
     GL20.glUniform1f(location, value);
+    return this;
   }
   
   
   
-  public void setUniform2iVariable(String name, int v0, int v1){
+  public Shader setUniform2iVariable(String name, int v0, int v1){
     CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
     locationCheck(location, name);
     GL20.glUniform2i(location, v0, v1);
+    return this;
   }
   
   
   
-  public void setUniform2fVariable(String name,
+  public Shader setUniform2fVariable(String name,
                                    float v0, float v1){
     CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
     locationCheck(location, name);
     GL20.glUniform2f(location, v0, v1);
+    
+    return this;
   }
   
   
   
-  public void setUniform3iVariable(String name,
+  public Shader setUniform3iVariable(String name,
                                    int v0, int v1, int v2){
     CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
     locationCheck(location, name);
     GL20.glUniform3i(location, v0, v1, v2);
+    return this;
   }
   
   
   
-  public void setUniform3fVariable(String name,
+  public Shader setUniform3fVariable(String name,
                                    float v0, float v1, float v2){
     CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
     locationCheck(location, name);
     GL20.glUniform3f(location, v0, v1, v2);
+    return this;
   }
   
   
   
-  public void setUniform3iVariable(String name,
+  public Shader setUniform3iVariable(String name,
                                    int v0, int v1, int v2, int v3){
     CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
     locationCheck(location, name);
     GL20.glUniform4i(location, v0, v1, v2, v3);
+    return this;
   }
   
   
   
-  public void setUniform4fVariable(String name,
+  public Shader setUniform4fVariable(String name,
                                    float v0, float v1,
                                    float v2, float v3){
     CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
     locationCheck(location, name);
     GL20.glUniform4f(location, v0, v1, v2, v3);
+    return this;
   }
   
   
   
   //TODO Test
-  public void setUniformMatrix(String name,
+  public Shader setUniformMatrix(String name,
                                boolean transpose,
                                float[][] matrix){
     //Convert matrix format
@@ -373,6 +381,8 @@ public class Shader {
       case 4: GL20.glUniformMatrix4(location, transpose, matBuffer);
       break;
     }
+    
+    return this;
   }
   
   

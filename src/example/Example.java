@@ -176,9 +176,9 @@ public class Example extends BasicGame{
 
     
     multi.startShader();
-      multi.setUniform2fVariable("lighting", (mx-400)/200.00f, (my-20)/200.0f);
-      multi.setUniform1iVariable("colorMap\0", 0);
-      multi.setUniform1iVariable("normalMap\0", 1);
+      multi.setUniform2fVariable("lighting", (mx-400)/200.00f, (my-20)/200.0f)
+           .setUniform1iVariable("colorMap\0", 0)
+           .setUniform1iVariable("normalMap\0", 1);
       img2.draw(400, 20);
 
     wave.startShader();

@@ -37,9 +37,10 @@ public class MultiTex implements Renderable{
   
   public List<Texture> textures;
   
-  //Width and height based off first texture loaded
+  int primaryTextureIndex = 0;
+  //Width and height based off primary texture loaded
   private float imgWidth, imgHeight;
-  //Texture width and height clamped between 0 and 1 
+  //Primary texture width and height clamped between 0 and 1 
   private float texWidth, texHeight; 
   
   /**
@@ -95,10 +96,10 @@ public class MultiTex implements Renderable{
     //Reset current texture unit to 0
     GL13.glActiveTexture(GL13.GL_TEXTURE0);
     
-    imgWidth  = this.textures.get(0).getImageWidth();
-    imgHeight = this.textures.get(0).getImageHeight();
-    texWidth  = this.textures.get(0).getWidth();
-    texHeight = this.textures.get(0).getHeight();
+    imgWidth  = this.textures.get(primaryTextureIndex).getImageWidth();
+    imgHeight = this.textures.get(primaryTextureIndex).getImageHeight();
+    texWidth  = this.textures.get(primaryTextureIndex).getWidth();
+    texHeight = this.textures.get(primaryTextureIndex).getHeight();
   }
   
   

@@ -21,6 +21,28 @@ import org.newdawn.slick.util.ResourceLoader;
  *
  */
 public class Shader {
+	
+  /**
+   * Class used to keep track of variables associated with this
+   * shader.</br>
+   * 
+   * @author Chronocide (Jeremy Klix)
+   *
+   */
+  private static class ShaderVariables{
+	static final int ATTRIBUTE = 0;
+	static final int VARYING = 1;
+	static final int UNIFORM = 2;
+	
+	static final int INTEGER_1 = 0;
+	static final int FLOAT_1 = 1;
+	
+	int qualifier = -1;
+	int type = -1;
+	int location = -1;
+	String name = "";
+  }
+	
   public static final int BRIEF = 128;
   public static final int MODERATE = 512;
   public static final int VERBOSE = 1024;
@@ -99,6 +121,7 @@ public class Shader {
         errorMessage.append("Stack Trace:");
         throw new SlickException(errorMessage.toString());
       }
+      
   }
   
   
@@ -259,8 +282,8 @@ public class Shader {
 //UNIFORM SETTERS
   //TODO figure out if there is any practical way to ensure that
   //the setter type used matches the variable name passed in.
-  //That is if a they are calling setUnifromVariable1f on shader
-  //variable "offset" offset really is a float.
+  //That is if the user calls setUnifromVariable1f on shader
+  //variable "offset" check that offset really is a float.
   
   /**
    * Sets the value of the uniform integer Variable <tt>name</tt>.</br>
@@ -497,5 +520,16 @@ public class Shader {
     return shaderPro;
   }
   
+  
+  
+  private void findVariables(String program){
+	String[] statements = program.split(";");
+	for(int i=0; i<statements.length; i++){
+		statements[i] = statements[i].trim();
+		if(statements[i].startsWith("uniform")){
+			System.out.println(statements[i]);
+		}
+	}
+  }
   
 }

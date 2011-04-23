@@ -1,18 +1,17 @@
 package shader;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
 
-import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.util.ResourceLoader;
+
 
 /**
  * Class used to use and access shaders without having to deal
@@ -21,109 +20,23 @@ import org.newdawn.slick.util.ResourceLoader;
  *
  */
 public class Shader {
-	
-  /**
-   * Class used to keep track of variables associated with this
-   * shader.</br>
-   * 
-   * @author Chronocide (Jeremy Klix)
-   *
-   */
-  private static class ShaderVariables{
-	static final int ATTRIBUTE = 0;
-	static final int VARYING = 1;
-	static final int UNIFORM = 2;
-	
-	static final int INTEGER_1 = 0;
-	static final int FLOAT_1 = 1;
-	
-	int qualifier = -1;
-	int type = -1;
-	int location = -1;
-	String name = "";
-  }
-	
   public static final int BRIEF = 128;
   public static final int MODERATE = 512;
-  public static final int VERBOSE = 1024;
-  private static int logging = MODERATE;
+  public static final int VERBOSE = 1024;  
   private static final int NOT_LOADED = -1;
+  private static final String ERR_LOCATION =
+    "Warning: variable %s could not be found. " +
+    "Ensure the name is spelled correctly\n";
+  private static int logging = MODERATE;
   
   private ShaderResourceManager srm;
-  
   /**
    * ID of the <tt>Shader</tt>.  A Shader may have programID of 
    * -1 only before construction is completed, or
    * after the <tt>Shader</tt> is deleted
    */
   private int programID = NOT_LOADED;
-  
-  
-  
-  /**
-   * @Deprecated use for testing only.
-   * Private constructor used to guard against external extension.
-   * While determining how extensions should work.</br>
-   * @param srm
-   * @param vertexFileName
-   * @param fragmentFileName
-   * @throws SlickException
-   * TODO needs testing to ensure that cleaning up after failed,
-   * shaders works. 
-   * TODO delete
-   */
-  private Shader(ShaderResourceManager srm,
-                 String vertexFileName,
-                 String fragmentFileName) throws SlickException{
-    this.srm = srm;
-    StringBuilder errorMessage = new StringBuilder();
-    
-    programID = GL20.glCreateProgram();
-    int vsid = srm.getVertexShaderID(vertexFileName);
-    int fsid = srm.getFragementShaderID(fragmentFileName);
-    
-    srm.createProgramShaderDependancy(programID, vsid);
-    srm.createProgramShaderDependancy(programID, fsid);
-    
-    GL20.glShaderSource(vsid, getProgramCode(vertexFileName));
-      GL20.glCompileShader(vsid);
-      if(!compiledSuccessfully(vsid)){
-        errorMessage.append("Could not compile Vertex Shader ");
-        errorMessage.append(vertexFileName);
-        errorMessage.append(" failed to compile.\n");
-        errorMessage.append(getShaderInfoLog(vsid));
-        errorMessage.append("\n\n");
-      }
-    
-    GL20.glShaderSource(fsid, getProgramCode(fragmentFileName));
-      GL20.glCompileShader(fsid);
-      if(!compiledSuccessfully(fsid)){
-        errorMessage.append("Could not compile Fragment Shader ");
-        errorMessage.append(fragmentFileName);
-        errorMessage.append(" failed to compile.\n");
-        errorMessage.append(getShaderInfoLog(fsid));
-        errorMessage.append("\n\n");
-      }
-
-      GL20.glAttachShader(programID, vsid);
-      GL20.glAttachShader(programID, fsid);
-    
-      GL20.glLinkProgram(programID);
-      if(!linkedSuccessfully()){
-        errorMessage.append("Linking Error\n");
-        errorMessage.append(getProgramInfoLog());
-        errorMessage.append("\n\n");
-      }
-      
-      if(errorMessage.length()!=0){
-        srm.removeProgram(programID);
-        programID = -1;
-        errorMessage.append("Stack Trace:");
-        throw new SlickException(errorMessage.toString());
-      }
-      
-  }
-  
+  private Map<String, ShaderVariable> vars = new HashMap<String, ShaderVariable>();
   
   
   private Shader(ShaderResourceManager srm,
@@ -138,7 +51,7 @@ public class Shader {
     int index = 0;
     
     //Load Vertex Shaders
-    for(String vertShader: vertex){
+    for(String vertShader: vertex){      
       int vsid = srm.getVertexShaderID(vertShader);
       srm.createProgramShaderDependancy(programID, vsid);
       
@@ -154,11 +67,13 @@ public class Shader {
         errorMessage.append(getShaderInfoLog(vsid));
         errorMessage.append("\n\n");
       }
+      
+      scanSource(vertShader);
     }
     
     
     //Load Fragment Shaders
-    for(String fragShader: fragment){
+    for(String fragShader: fragment){      
       int fsid = srm.getFragementShaderID(fragShader);
       srm.createProgramShaderDependancy(programID, fsid);
 
@@ -174,6 +89,8 @@ public class Shader {
         errorMessage.append(getShaderInfoLog(fsid));
         errorMessage.append("\n\n");
       }
+      
+      scanSource(fragShader);
     }
     
     //Attach shaders to program
@@ -195,6 +112,7 @@ public class Shader {
       errorMessage.append("Stack Trace:");
       throw new SlickException(errorMessage.toString());
     }
+    
     
   }
   
@@ -279,22 +197,57 @@ public class Shader {
   
   
   
-//UNIFORM SETTERS
-  //TODO figure out if there is any practical way to ensure that
-  //the setter type used matches the variable name passed in.
-  //That is if the user calls setUnifromVariable1f on shader
-  //variable "offset" check that offset really is a float.
-  
+//UNIFORM SETTERS  
   /**
    * Sets the value of the uniform integer Variable <tt>name</tt>.</br>
    * @param name the variable to set.
    * @param value the value to be set.
    */
-  public Shader setUniform1iVariable(String name, int value){
-    CharSequence param = new StringBuffer(prepareStringVariable(name));
-    int location = GL20.glGetUniformLocation(programID, param);
-    locationCheck(location, name);
-    GL20.glUniform1i(location, value);
+  public Shader setUniformIntVariable(String name, int value){
+    ShaderVariable var = vars.get(prepareStringVariable(name));
+    if(vars==null){
+      printError(name);
+    }else{
+      var.setUniformValue(new int[]{value});
+    }
+    return this;
+  }
+  
+  
+  
+  public Shader setUniformIntVariable(String name, int v0, int v1){
+    ShaderVariable var = vars.get(prepareStringVariable(name));
+    if(vars==null){
+      printError(name);
+    }else{
+      var.setUniformValue(new int[]{v0,v1});
+    }
+    return this;
+  }
+  
+  
+  
+  public Shader setUniformIntVariable(String name,
+                                      int v0, int v1, int v2){
+    ShaderVariable var = vars.get(prepareStringVariable(name));
+    if(vars==null){
+      printError(name);
+    }else{
+      var.setUniformValue(new int[]{v0, v1, v2});
+    }
+    return this;
+  }
+  
+  
+  
+  public Shader setUniformIntVariable(String name,
+                                      int v0, int v1, int v2, int v3){
+    ShaderVariable var = vars.get(prepareStringVariable(name));
+    if(vars==null){
+      printError(name);
+    }else{
+      var.setUniformValue(new int[]{v0, v1, v2, v3});
+    }
     return this;
   }
 
@@ -306,84 +259,60 @@ public class Shader {
    * @param name the variable to set.
    * @param value the value to be set.
    */
-  public Shader setUniform1fVariable(String name, float value){
-    CharSequence param = new StringBuffer(prepareStringVariable(name));
-    int location = GL20.glGetUniformLocation(programID, param);
-    locationCheck(location, name);
-    GL20.glUniform1f(location, value);
+  public Shader setUniformFloatVariable(String name, float value){
+    ShaderVariable var = vars.get(prepareStringVariable(name));
+    if(vars==null){
+      printError(name);
+    }else{
+      var.setUniformValue(new float[]{value});
+    }
     return this;
   }
   
   
   
-  public Shader setUniform2iVariable(String name, int v0, int v1){
-    CharSequence param = new StringBuffer(prepareStringVariable(name));
-    int location = GL20.glGetUniformLocation(programID, param);
-    locationCheck(location, name);
-    GL20.glUniform2i(location, v0, v1);
+  public Shader setUniformFloatVariable(String name,
+                                        float v0, float v1){
+    ShaderVariable var = vars.get(prepareStringVariable(name));
+    if(vars==null){
+      printError(name);
+    }else{
+      var.setUniformValue(new float[]{v0, v1});
+    }
     return this;
   }
   
   
   
-  public Shader setUniform2fVariable(String name,
-                                   float v0, float v1){
-    CharSequence param = new StringBuffer(prepareStringVariable(name));
-    int location = GL20.glGetUniformLocation(programID, param);
-    locationCheck(location, name);
-    GL20.glUniform2f(location, v0, v1);
-    
+  public Shader setUniformFloatVariable(String name,
+                                        float v0, float v1, float v2){
+    ShaderVariable var = vars.get(prepareStringVariable(name));
+    if(vars==null){
+      printError(name);
+    }else{
+      var.setUniformValue(new float[]{v0, v1, v2});
+    }
     return this;
   }
   
   
   
-  public Shader setUniform3iVariable(String name,
-                                   int v0, int v1, int v2){
-    CharSequence param = new StringBuffer(prepareStringVariable(name));
-    int location = GL20.glGetUniformLocation(programID, param);
-    locationCheck(location, name);
-    GL20.glUniform3i(location, v0, v1, v2);
-    return this;
-  }
-  
-  
-  
-  public Shader setUniform3fVariable(String name,
-                                   float v0, float v1, float v2){
-    CharSequence param = new StringBuffer(prepareStringVariable(name));
-    int location = GL20.glGetUniformLocation(programID, param);
-    locationCheck(location, name);
-    GL20.glUniform3f(location, v0, v1, v2);
-    return this;
-  }
-  
-  
-  
-  public Shader setUniform3iVariable(String name,
-                                   int v0, int v1, int v2, int v3){
-    CharSequence param = new StringBuffer(prepareStringVariable(name));
-    int location = GL20.glGetUniformLocation(programID, param);
-    locationCheck(location, name);
-    GL20.glUniform4i(location, v0, v1, v2, v3);
-    return this;
-  }
-  
-  
-  
-  public Shader setUniform4fVariable(String name,
-                                   float v0, float v1,
-                                   float v2, float v3){
-    CharSequence param = new StringBuffer(prepareStringVariable(name));
-    int location = GL20.glGetUniformLocation(programID, param);
-    locationCheck(location, name);
-    GL20.glUniform4f(location, v0, v1, v2, v3);
+  public Shader setUniformFloatVariable(String name,
+                                        float v0, float v1,
+                                        float v2, float v3){
+    ShaderVariable var = vars.get(prepareStringVariable(name));
+    if(vars==null){
+      printError(name);
+    }else{
+      var.setUniformValue(new float[]{v0, v1, v2, v3});
+    }
     return this;
   }
   
   
   
   //TODO Test
+  //TODO implement using ShaderVariable
   public Shader setUniformMatrix(String name,
                                boolean transpose,
                                float[][] matrix){
@@ -393,7 +322,7 @@ public class Shader {
     //Get uniform location
     CharSequence param = new StringBuffer(prepareStringVariable(name));
     int location = GL20.glGetUniformLocation(programID, param);
-    locationCheck(location, name);
+    printError(name);
 
     //determine correct matrixSetter
     switch(matrix.length){
@@ -436,11 +365,8 @@ public class Shader {
   
   
   
-  private void locationCheck(int location, String varName){
-    if(location==-1){
-      System.err.println("Warning: variable " + varName + " could " +
-          "not be found. Ensure the name is spelled correctly");
-    }
+  private void printError(String varName){
+      System.err.printf(ERR_LOCATION, varName);
   }
   
   
@@ -488,48 +414,65 @@ public class Shader {
   
   
   
-  /**
-   * @Deprecated
-   * Gets the program code from the file "filename" and puts in into a 
-   * byte buffer.
-   * @param filename the full name of the file.
-   * @return a ByteBuffer containing the program code.
-   * @throws SlickException
-   * TODO delete: depended on by deprecated constructor
-   */
-  private ByteBuffer getProgramCode(String filename)throws SlickException{
-    InputStream fileInputStream = null;
-    byte[] shaderCode = null;
-        
-    fileInputStream = ResourceLoader.getResourceAsStream(filename);
-    DataInputStream dataStream = new DataInputStream(fileInputStream);
-    try{
-      dataStream.readFully(shaderCode = new byte[fileInputStream.available()]);
-      fileInputStream.close();
-      dataStream.close();
-    }catch (IOException e) {
-      throw new SlickException(e.getMessage());
-    }
-
- 
-    ByteBuffer shaderPro = BufferUtils.createByteBuffer(shaderCode.length);
-
-    shaderPro.put(shaderCode);
-    shaderPro.flip();
-
-    return shaderPro;
+  private void scrapeVariables(String varLine){
+    ShaderVariable.Qualifier qualifier = null;
+    ShaderVariable.Type type = null;
+    int count = 1;
+    
+    String str;
+  	Scanner scanner = new Scanner(varLine);
+  	scanner.useDelimiter("[\\s,]++");
+  	
+  	//Determine qualifier
+  	qualifier = ShaderVariable.Qualifier.fromString(scanner.next());
+  	
+  	//Determine type
+  	str = scanner.next();
+  	if(str.equals("float")){
+  	  type = ShaderVariable.Type.FLOAT;
+  	}else if(str.matches("[u]?int|sampler[123]D")){
+  	  type = ShaderVariable.Type.INTEGER;
+  	}else if(str.equals("bool")){
+  	  type = ShaderVariable.Type.BOOLEAN;
+  	}else if(str.matches("[bdiu]?vec[234]")){
+  	  char c = str.charAt(0);
+  	  switch(c){
+  	    case 'b':
+  	      type = ShaderVariable.Type.BOOLEAN; break;
+  	    case 'd':
+  	      type = ShaderVariable.Type.DOUBLE; break;
+  	    case 'i':
+  	    case 'u':
+          type = ShaderVariable.Type.INTEGER; break;
+  	    case 'v':
+  	      type = ShaderVariable.Type.FLOAT; break;
+  	  }
+  	  
+  	  str = str.substring(str.length()-1);
+  	  count = Integer.parseInt(str);
+  	}
+  	
+  	
+  	//Determine variable names
+  	while(scanner.hasNext("[\\w_]+[\\w\\d_]")){
+  	  ShaderVariable var =
+  	    new ShaderVariable(programID,
+  	                       scanner.next(), qualifier, type, count);
+  	  vars.put(var.name, var);
+  	}
   }
   
   
   
-  private void findVariables(String program){
-	String[] statements = program.split(";");
-	for(int i=0; i<statements.length; i++){
-		statements[i] = statements[i].trim();
-		if(statements[i].startsWith("uniform")){
-			System.out.println(statements[i]);
-		}
-	}
+  private void scanSource(String filename){
+    Scanner scanner = new Scanner(ResourceLoader.getResourceAsStream(filename));
+    scanner.useDelimiter(";|\\{|\\}");
+    while(scanner.hasNext()){
+      while(scanner.hasNext("\\s*?(uniform|attribute|varying).*")){
+        scrapeVariables(scanner.next().trim());
+      }
+      scanner.next();
+    }
   }
   
 }

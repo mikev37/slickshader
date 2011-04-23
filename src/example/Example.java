@@ -21,6 +21,7 @@ import shader.Shader;
  * Simple example/test class for shader support stuff. 
  * @author Chronocide (Jeremy Klix)
  *
+ *TODO add a shader that tests more of the things in Shader.java
  */
 public class Example extends BasicGame{
   
@@ -153,8 +154,8 @@ public class Example extends BasicGame{
 
     
     julia.startShader();
-      julia.setUniform1fVariable("cX\0", cX/zoom + dx);
-      julia.setUniform1fVariable("cY\0", cY/zoom + dy);
+      julia.setUniformFloatVariable("cX\0", cX/zoom + dx);
+      julia.setUniformFloatVariable("cY\0", cY/zoom + dy);
       GL11.glBegin(GL11.GL_QUADS);
         GL11.glTexCoord2f(-1.75f, 1.5f);
         GL11.glVertex3f(quad2[0],  quad2[1],  quad2[2]);
@@ -176,13 +177,13 @@ public class Example extends BasicGame{
 
     
     multi.startShader();
-      multi.setUniform2fVariable("lighting", (mx-400)/200.00f, (my-20)/200.0f)
-           .setUniform1iVariable("colorMap\0", 0)
-           .setUniform1iVariable("normalMap\0", 1);
+      multi.setUniformFloatVariable("lighting", (mx-400)/200.00f, (my-20)/200.0f)
+           .setUniformIntVariable("colorMap\0", 0)
+           .setUniformIntVariable("normalMap\0", 1);
       img2.draw(400, 20);
 
     wave.startShader();
-      wave.setUniform1fVariable("offset", shift);
+      wave.setUniformFloatVariable("offset", shift);
       img.draw(1000,600);
         
     Shader.forceFixedShader();
@@ -199,7 +200,6 @@ public class Example extends BasicGame{
       AppGameContainer agc = new AppGameContainer(t, 1200, 800, false);
       agc.start();
     }catch(SlickException e){
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
   }

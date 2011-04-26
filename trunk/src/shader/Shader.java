@@ -205,7 +205,7 @@ public class Shader {
    */
   public Shader setUniformIntVariable(String name, int value){
     ShaderVariable var = vars.get(prepareStringVariable(name));
-    if(vars==null){
+    if(var==null){
       printError(name);
     }else{
       var.setUniformValue(new int[]{value});
@@ -217,7 +217,7 @@ public class Shader {
   
   public Shader setUniformIntVariable(String name, int v0, int v1){
     ShaderVariable var = vars.get(prepareStringVariable(name));
-    if(vars==null){
+    if(var==null){
       printError(name);
     }else{
       var.setUniformValue(new int[]{v0,v1});
@@ -230,7 +230,7 @@ public class Shader {
   public Shader setUniformIntVariable(String name,
                                       int v0, int v1, int v2){
     ShaderVariable var = vars.get(prepareStringVariable(name));
-    if(vars==null){
+    if(var==null){
       printError(name);
     }else{
       var.setUniformValue(new int[]{v0, v1, v2});
@@ -243,7 +243,7 @@ public class Shader {
   public Shader setUniformIntVariable(String name,
                                       int v0, int v1, int v2, int v3){
     ShaderVariable var = vars.get(prepareStringVariable(name));
-    if(vars==null){
+    if(var==null){
       printError(name);
     }else{
       var.setUniformValue(new int[]{v0, v1, v2, v3});
@@ -261,7 +261,7 @@ public class Shader {
    */
   public Shader setUniformFloatVariable(String name, float value){
     ShaderVariable var = vars.get(prepareStringVariable(name));
-    if(vars==null){
+    if(var==null){
       printError(name);
     }else{
       var.setUniformValue(new float[]{value});
@@ -274,7 +274,7 @@ public class Shader {
   public Shader setUniformFloatVariable(String name,
                                         float v0, float v1){
     ShaderVariable var = vars.get(prepareStringVariable(name));
-    if(vars==null){
+    if(var==null){
       printError(name);
     }else{
       var.setUniformValue(new float[]{v0, v1});
@@ -287,7 +287,7 @@ public class Shader {
   public Shader setUniformFloatVariable(String name,
                                         float v0, float v1, float v2){
     ShaderVariable var = vars.get(prepareStringVariable(name));
-    if(vars==null){
+    if(var==null){
       printError(name);
     }else{
       var.setUniformValue(new float[]{v0, v1, v2});
@@ -301,7 +301,7 @@ public class Shader {
                                         float v0, float v1,
                                         float v2, float v3){
     ShaderVariable var = vars.get(prepareStringVariable(name));
-    if(vars==null){
+    if(var==null){
       printError(name);
     }else{
       var.setUniformValue(new float[]{v0, v1, v2, v3});

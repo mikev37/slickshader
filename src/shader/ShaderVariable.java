@@ -66,12 +66,15 @@ class ShaderVariable{
     "Expected qualifier %s but got %s instead.\n";
   
   private ShaderVariable.Qualifier qualifier = null;
-  ShaderVariable.Type type = null;
+  private ShaderVariable.Type type = null;
   private int count;
   private int programID;
   
   
-  int location = -1;
+  private int location = -1;
+  
+  /**Set true if GLSL has removed this unused variable*/
+  private boolean isCulled = false;
   String name = "";
   
   ShaderVariable(int programID, String name,
@@ -194,9 +197,14 @@ class ShaderVariable{
   
   
   private void locationCheck(){
-    if(location==-1){
-      throw new AssertionError("Location for variable " + name +
-                               "could not be found.");
+    if(location==-1 && !isCulled){
+      System.err.println("Location for variable " + name +
+                         "could not be found.\nSome " +
+                         "implementations of GLSL will remove " +
+                         "vairables that are not used within " +
+                         "the shader program. Check and ensure " +
+                         "that " + name + "is being used.\n");
+      isCulled = true;
     }
   }
 }

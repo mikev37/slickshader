@@ -2,6 +2,9 @@ package example;
 
 
 
+import java.nio.FloatBuffer;
+
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.AppGameContainer;
 import org.newdawn.slick.BasicGame;
@@ -29,6 +32,7 @@ public class Example extends BasicGame{
   private Shader julia;
   private Shader wave;
   private Shader multi;
+  private Shader multi2;
   
   private Image img;
   private MultiTex img2;
@@ -53,15 +57,13 @@ public class Example extends BasicGame{
   
 
   @Override
-  public void init(GameContainer gc) throws SlickException{
-    //String s= GL11.glGetString(GL11.GL_EXTENSIONS);
-    //System.out.println(s);
-    //System.out.println();
-    
+  public void init(GameContainer gc) throws SlickException{    
     mandelbrot = Shader.makeShader("data/fractal.vrt", "data/mandelbrot.frg");
     julia = Shader.makeShader("data/fractal.vrt", "data/julia.frg");
     wave = Shader.makeShader("data/wave.vrt", "data/wave.frg");
     multi = Shader.makeShader("data/multiTex.vrt", "data/multiTex.frg");
+    multi2 = Shader.makeShader("data/glLight_VertShader.vrt",
+                               "data/glLight_VertShader.frg");
     
     img = new Image("data/base.png"); 
     img2 = new MultiTex("data/base.png", "data/normal.png");
@@ -75,6 +77,35 @@ public class Example extends BasicGame{
                         0, 1, 0,
                         1, 1, 0,
                         1, 0, 0};
+
+    
+    FloatBuffer fbpos = BufferUtils.createFloatBuffer(4);
+    fbpos.put(new float[]{mx, my, my/25.0f, 0.0f}).flip();
+    
+    FloatBuffer spec = BufferUtils.createFloatBuffer(4);
+    spec.put(new float[]{0.5f, 0.5f, 0.5f, 1.0f}).flip();
+    
+    FloatBuffer amb = BufferUtils.createFloatBuffer(4);
+    amb.put(new float[]{0.25f, 0.25f, 0.25f, 1.0f}).flip();
+    
+    FloatBuffer diff = BufferUtils.createFloatBuffer(4);
+    diff.put(new float[]{0.5f, 0.5f, 0.5f, 1.0f}).flip();
+    
+    GL11.glEnable(GL11.GL_LIGHTING);
+    GL11.glEnable(GL11.GL_LIGHT0);
+    GL11.glShadeModel(GL11.GL_SMOOTH);
+    GL11.glLight(GL11.GL_LIGHT0,
+                 GL11.GL_POSITION,
+                 fbpos);
+    GL11.glLight(GL11.GL_LIGHT0,
+                 GL11.GL_SPECULAR,
+                 spec);
+    GL11.glLight(GL11.GL_LIGHT0,
+                 GL11.GL_AMBIENT,
+                 amb);
+    GL11.glLight(GL11.GL_LIGHT0,
+                 GL11.GL_DIFFUSE,
+                 diff);
   }
 
   
@@ -186,8 +217,28 @@ public class Example extends BasicGame{
       wave.setUniformFloatVariable("offset", shift);
       img.draw(1000,600);
         
-    Shader.forceFixedShader();
+    
+    
+    FloatBuffer fbpos = BufferUtils.createFloatBuffer(4);
+    fbpos.put(new float[]{mx, my, my/25.0f, 0.0f}).flip();
+    
+    GL11.glEnable(GL11.GL_LIGHTING);
+    GL11.glEnable(GL11.GL_LIGHT0);
+    GL11.glShadeModel(GL11.GL_SMOOTH);
+    GL11.glLight(GL11.GL_LIGHT0,
+                 GL11.GL_POSITION,
+                 fbpos);
 
+    multi2.startShader();
+      multi2.setUniformIntVariable("colorMap\0", 0)
+            .setUniformIntVariable("normalMap\0", 1);
+      
+      img2.draw(80,240);
+    
+    GL11.glDisable(GL11.GL_LIGHTING);
+
+    Shader.forceFixedShader();
+    
     g.drawString("Use [0] [1] [2] [3] to select corner\nUse [R] [G] [B] [W] to change colour", 400, 185);
   }
 

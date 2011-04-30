@@ -311,8 +311,8 @@ public class Shader {
   
   
   
-  //TODO Test
   //TODO implement using ShaderVariable
+  //TODO Test
   public Shader setUniformMatrix(String name,
                                boolean transpose,
                                float[][] matrix){
@@ -338,7 +338,7 @@ public class Shader {
   }
   
   
-  
+   
   private FloatBuffer matrixPrepare(float[][] matrix){
     //Check argument validity
     if(matrix==null){
@@ -359,7 +359,8 @@ public class Shader {
         unrolled[i*col+j] = matrix[i][j];
       }
     }
-    
+
+    //TODO FloatBuffer creation here is probably broken
     return FloatBuffer.wrap(unrolled);
   }
   

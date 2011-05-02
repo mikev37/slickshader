@@ -199,11 +199,10 @@ class ShaderVariable{
   private void locationCheck(){
     if(location==-1 && !isCulled){
       System.err.println("Location for variable " + name +
-                         "could not be found.\nSome " +
-                         "implementations of GLSL will remove " +
-                         "vairables that are not used within " +
-                         "the shader program. Check and ensure " +
-                         "that " + name + "is being used.\n");
+                         "could not be found.\nGLSL may remove " +
+                         "any vairable that does not contribute " +
+                         "to an output. Check and ensure " +
+                         "that " + name + "is an active variable.\n");
       isCulled = true;
     }
   }

@@ -61,9 +61,9 @@ public class Example extends BasicGame{
     mandelbrot = Shader.makeShader("data/fractal.vrt", "data/mandelbrot.frg");
     julia = Shader.makeShader("data/fractal.vrt", "data/julia.frg");
     wave = Shader.makeShader("data/wave.vrt", "data/wave.frg");
-    multi = Shader.makeShader("data/multiTex.vrt", "data/multiTex.frg");
-    multi2 = Shader.makeShader("data/glLight_VertShader.vrt",
-                               "data/glLight_VertShader.frg");
+//    multi = Shader.makeShader("data/multiTex.vrt", "data/multiTex.frg");
+//    multi2 = Shader.makeShader("data/glLight_VertShader.vrt",
+//                               "data/glLight_VertShader.frg");
     
     img = new Image("data/base.png"); 
     img2 = new MultiTex("data/base.png", "data/normal.png");
@@ -207,11 +207,11 @@ public class Example extends BasicGame{
     
 
     
-    multi.startShader();
-      multi.setUniformFloatVariable("lighting", (mx-400)/200.00f, (my-20)/200.0f)
-           .setUniformIntVariable("colorMap\0", 0)
-           .setUniformIntVariable("normalMap\0", 1);
-      img2.draw(400, 20);
+//    multi.startShader();
+//      multi.setUniformFloatVariable("lighting", (mx-400)/200.00f, (my-20)/200.0f)
+//           .setUniformIntVariable("colorMap\0", 0)
+//           .setUniformIntVariable("normalMap\0", 1);
+//      img2.draw(400, 20);
 
     wave.startShader();
       wave.setUniformFloatVariable("offset", shift);
@@ -219,23 +219,23 @@ public class Example extends BasicGame{
         
     
     
-    FloatBuffer fbpos = BufferUtils.createFloatBuffer(4);
-    fbpos.put(new float[]{mx, my, my/25.0f, 0.0f}).flip();
-    
-    GL11.glEnable(GL11.GL_LIGHTING);
-    GL11.glEnable(GL11.GL_LIGHT0);
-    GL11.glShadeModel(GL11.GL_SMOOTH);
-    GL11.glLight(GL11.GL_LIGHT0,
-                 GL11.GL_POSITION,
-                 fbpos);
-
-    multi2.startShader();
-      multi2.setUniformIntVariable("colorMap\0", 0)
-            .setUniformIntVariable("normalMap\0", 1);
-      
-      img2.draw(80,240);
-    
-    GL11.glDisable(GL11.GL_LIGHTING);
+//    FloatBuffer fbpos = BufferUtils.createFloatBuffer(4);
+//    fbpos.put(new float[]{mx, my, my/25.0f, 0.0f}).flip();
+//    
+//    GL11.glEnable(GL11.GL_LIGHTING);
+//    GL11.glEnable(GL11.GL_LIGHT0);
+//    GL11.glShadeModel(GL11.GL_SMOOTH);
+//    GL11.glLight(GL11.GL_LIGHT0,
+//                 GL11.GL_POSITION,
+//                 fbpos);
+//
+//    multi2.startShader();
+//      multi2.setUniformIntVariable("colorMap\0", 0)
+//            .setUniformIntVariable("normalMap\0", 1);
+//      
+//      img2.draw(80,240);
+//    
+//    GL11.glDisable(GL11.GL_LIGHTING);
 
     Shader.forceFixedShader();
     

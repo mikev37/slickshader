@@ -1,8 +1,11 @@
 package shader;
 
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL20;
 
 
@@ -67,7 +70,8 @@ class ShaderVariable{
   
   private ShaderVariable.Qualifier qualifier = null;
   private ShaderVariable.Type type = null;
-  private int count;
+  private int vecSize; //size of vector
+  private int size; //size of array non arrays are size 1
   private int programID;
   
   
@@ -80,20 +84,21 @@ class ShaderVariable{
   ShaderVariable(int programID, String name,
                  ShaderVariable.Qualifier qual,
                  ShaderVariable.Type type,
-                 int argCount){
+                 int vecSize,
+                 int size){
     this.programID = programID;
-    if(!name.endsWith("\0")){
-      this.name = name + "\0";
-    }else{
-      this.name = name;
-    }
+    this.name = name;
     
     this.qualifier = qual;
     this.type      = type;
-    if(argCount<1){
-      throw new IllegalArgumentException("argCount must be greater than 0");
+    if(vecSize<1){
+      throw new IllegalArgumentException("size of elements must be greater than 0");
     }
-    this.count     = argCount;
+    this.vecSize = vecSize;
+    if(size<1){
+      throw new IllegalArgumentException("number of elements must be greater than 0");
+    }
+    this.size = size;
   }
   
   
@@ -118,7 +123,7 @@ class ShaderVariable{
   }
  
   
-  
+  //TODO TEST
   void setUniformValue(boolean[] vals){
     if(this.type!=Type.BOOLEAN){
       System.err.printf(TYPE_WARN, this.name, this.type, Type.BOOLEAN);
@@ -126,10 +131,28 @@ class ShaderVariable{
     if(this.qualifier!=Qualifier.UNIFORM){
       System.err.printf(QUAL_WARN, this.name, this.qualifier, Qualifier.UNIFORM);
     }
-    if(vals.length!=count){
+    if(vals.length!=vecSize){
       throw new AssertionError("Incorrect number of arguments.");
     }
+    
     //No GL methods to set boolean uniforms exist
+    if(location==-1){
+      CharSequence param = new StringBuffer(name);
+      location = GL20.glGetUniformLocation(programID, param);
+      locationCheck();
+    }
+    
+    IntBuffer fb = BufferUtils.createIntBuffer(vals.length);
+		for(boolean b : vals){
+			fb.put(b? 1 : 0);
+		}
+		fb.flip();
+    switch(vecSize){
+    	case 1: GL20.glUniform1(location, fb); break;
+    	case 2: GL20.glUniform2(location, fb); break;
+    	case 3: GL20.glUniform3(location, fb); break;
+    	case 4: GL20.glUniform4(location, fb); break;
+    }
   }
   
   
@@ -141,8 +164,10 @@ class ShaderVariable{
     if(this.qualifier!=Qualifier.UNIFORM){
       System.err.printf(QUAL_WARN, this.name, this.qualifier, Qualifier.UNIFORM);
     }
-    if(vals.length!=count){
-      throw new AssertionError("Incorrect number of arguments.");
+    if(vals.length!=vecSize*size){
+      throw new AssertionError("Incorrect number of values.\n" +
+      		"Expected " + vecSize*size + " vlaues but got " +
+      		vals.length + " values instead.");
     }
     
     if(location==-1){
@@ -151,16 +176,15 @@ class ShaderVariable{
       locationCheck();
     }
     
-    switch(count){
-      case 1: GL20.glUniform1f(location, vals[0]); break;
-      case 2: GL20.glUniform2f(location, vals[0], vals[1]); break;
-      case 3: GL20.glUniform3f(location,
-                               vals[0], vals[1], vals[2]); break;
-      case 4: GL20.glUniform4f(location,
-                               vals[0], vals[1],
-                               vals[2], vals[3]); break;
+    FloatBuffer fb = BufferUtils.createFloatBuffer(vals.length);
+		fb.put(vals);
+		fb.flip();
+    switch(vecSize){
+    	case 1: GL20.glUniform1(location, fb); break;
+    	case 2: GL20.glUniform2(location, fb); break;
+    	case 3: GL20.glUniform3(location, fb); break;
+    	case 4: GL20.glUniform4(location, fb); break;
     }
-    
   }
   
   
@@ -172,8 +196,10 @@ class ShaderVariable{
     if(this.qualifier!=Qualifier.UNIFORM){
       System.err.printf(QUAL_WARN, this.name, this.qualifier, Qualifier.UNIFORM);
     }
-    if(vals.length!=count){
-      throw new AssertionError("Incorrect number of arguments.");
+    if(vals.length!=vecSize*size){
+      throw new AssertionError("Incorrect number of values.\n" +
+      		"Expected " + vecSize*size + " vlaues but got " +
+      		vals.length + " values instead.");
     }
     
     if(location==-1){
@@ -182,16 +208,15 @@ class ShaderVariable{
       locationCheck();
     }
     
-    switch(count){
-      case 1: GL20.glUniform1i(location, vals[0]); break;
-      case 2: GL20.glUniform2i(location, vals[0], vals[1]); break;
-      case 3: GL20.glUniform3i(location,
-                               vals[0], vals[1], vals[2]); break;
-      case 4: GL20.glUniform4i(location,
-                               vals[0], vals[1],
-                               vals[2], vals[3]); break;
+    IntBuffer fb = BufferUtils.createIntBuffer(vals.length);
+		fb.put(vals);
+		fb.flip();
+    switch(vecSize){
+    	case 1: GL20.glUniform1(location, fb); break;
+    	case 2: GL20.glUniform2(location, fb); break;
+    	case 3: GL20.glUniform3(location, fb); break;
+    	case 4: GL20.glUniform4(location, fb); break;
     }
-    
   }
   
   

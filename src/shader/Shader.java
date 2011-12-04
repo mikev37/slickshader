@@ -163,8 +163,8 @@ public class Shader {
   
   /**
    * Deletes this shader and unloads all free resources.</br>
-   * TODO should this be called from <tt>finalise()</tt>, or is that just
-   * asking for trouble?
+   * TODO should this be called from <tt>finalise()</tt>, or is
+   * that just asking for trouble?
    */
   public void deleteShader(){
     srm.removeProgram(programID);
@@ -204,51 +204,38 @@ public class Shader {
    * @param value the value to be set.
    */
   public Shader setUniformIntVariable(String name, int value){
-    ShaderVariable var = vars.get(prepareStringVariable(name));
-    if(var==null){
-      printError(name);
-    }else{
-      var.setUniformValue(new int[]{value});
-    }
-    return this;
+  	return setUniformIntVariable(name, new int[]{value});
   }
   
   
   
   public Shader setUniformIntVariable(String name, int v0, int v1){
-    ShaderVariable var = vars.get(prepareStringVariable(name));
-    if(var==null){
-      printError(name);
-    }else{
-      var.setUniformValue(new int[]{v0,v1});
-    }
-    return this;
+  	return setUniformIntVariable(name, new int[]{v0, v1});
   }
   
   
   
   public Shader setUniformIntVariable(String name,
                                       int v0, int v1, int v2){
-    ShaderVariable var = vars.get(prepareStringVariable(name));
-    if(var==null){
-      printError(name);
-    }else{
-      var.setUniformValue(new int[]{v0, v1, v2});
-    }
-    return this;
+  	return setUniformIntVariable(name, new int[]{v0, v1, v2});
   }
   
   
   
   public Shader setUniformIntVariable(String name,
                                       int v0, int v1, int v2, int v3){
-    ShaderVariable var = vars.get(prepareStringVariable(name));
-    if(var==null){
-      printError(name);
-    }else{
-      var.setUniformValue(new int[]{v0, v1, v2, v3});
-    }
-    return this;
+    return setUniformIntVariable(name, new int[]{v0, v1, v2, v3});
+  }
+  
+  
+  public Shader setUniformIntVariable(String name, int[] values){
+	  ShaderVariable var = vars.get(name);
+	  if(var==null){
+	    printError(name);
+	  }else{
+	    var.setUniformValue(values);
+	  }
+  	return this;
   }
 
   
@@ -260,39 +247,21 @@ public class Shader {
    * @param value the value to be set.
    */
   public Shader setUniformFloatVariable(String name, float value){
-    ShaderVariable var = vars.get(prepareStringVariable(name));
-    if(var==null){
-      printError(name);
-    }else{
-      var.setUniformValue(new float[]{value});
-    }
-    return this;
+  	return setUniformFloatVariable(name, new float[]{value});
   }
   
   
   
   public Shader setUniformFloatVariable(String name,
                                         float v0, float v1){
-    ShaderVariable var = vars.get(prepareStringVariable(name));
-    if(var==null){
-      printError(name);
-    }else{
-      var.setUniformValue(new float[]{v0, v1});
-    }
-    return this;
+  	return setUniformFloatVariable(name, new float[]{v0, v1});
   }
   
   
   
   public Shader setUniformFloatVariable(String name,
                                         float v0, float v1, float v2){
-    ShaderVariable var = vars.get(prepareStringVariable(name));
-    if(var==null){
-      printError(name);
-    }else{
-      var.setUniformValue(new float[]{v0, v1, v2});
-    }
-    return this;
+  	return setUniformFloatVariable(name, new float[]{v0, v1, v2});
   }
   
   
@@ -300,13 +269,19 @@ public class Shader {
   public Shader setUniformFloatVariable(String name,
                                         float v0, float v1,
                                         float v2, float v3){
-    ShaderVariable var = vars.get(prepareStringVariable(name));
-    if(var==null){
-      printError(name);
-    }else{
-      var.setUniformValue(new float[]{v0, v1, v2, v3});
-    }
-    return this;
+  	return setUniformFloatVariable(name, new float[]{v0, v1, v2, v3});
+  }
+  
+  
+  
+  public Shader setUniformFloatVariable(String name, float[] values){
+	  ShaderVariable var = vars.get(name);
+	  if(var==null){
+	    printError(name);
+	  }else{
+	    var.setUniformValue(values);
+	  }
+  	return this;
   }
   
   
@@ -320,8 +295,7 @@ public class Shader {
     FloatBuffer matBuffer = matrixPrepare(matrix);
     
     //Get uniform location
-    CharSequence param = new StringBuffer(prepareStringVariable(name));
-    int location = GL20.glGetUniformLocation(programID, param);
+    int location = GL20.glGetUniformLocation(programID, name);
     printError(name);
 
     //determine correct matrixSetter
@@ -380,16 +354,7 @@ public class Shader {
   private boolean compiledSuccessfully(int shaderID){
     return GL20.glGetShader(shaderID, GL20.GL_COMPILE_STATUS)==GL11.GL_TRUE;
   }
-  
-  
-  
-  private String prepareStringVariable(String name){
-    if(name.endsWith("\0")){
-      return name;
-    }
-    return name+"\0";
-  }
-  
+
   
   
   /**
@@ -398,7 +363,9 @@ public class Shader {
    * @return true if the shader program linked successfully.</br>
    */
   private boolean linkedSuccessfully(){
-    return GL20.glGetShader(programID, GL20.GL_LINK_STATUS)==GL11.GL_TRUE;
+	  int test = GL20.glGetShader(programID, GL20.GL_LINK_STATUS);
+	  return true;
+//    return GL20.glGetShader(programID, GL20.GL_LINK_STATUS)==GL11.GL_TRUE;
   }
   
   
@@ -418,7 +385,9 @@ public class Shader {
   private void scrapeVariables(String varLine){
     ShaderVariable.Qualifier qualifier = null;
     ShaderVariable.Type type = null;
-    int count = 1;
+    String name  = "";
+    int    vecSize = 1; // if a vector the
+    int    size = 1; //If array size of array
     
     String str;
   	Scanner scanner = new Scanner(varLine);
@@ -450,15 +419,22 @@ public class Shader {
   	  }
   	  
   	  str = str.substring(str.length()-1);
-  	  count = Integer.parseInt(str);
+  	  vecSize = Integer.parseInt(str);
   	}
   	
   	
   	//Determine variable names
-  	while(scanner.hasNext("[\\w_]+[\\w\\d_]")){
+  	while(scanner.hasNext("[\\w_]+[\\w\\d_]*(\\[\\d+\\])?")){
+  		name = scanner.next();
+  		if(name.contains("]")){
+  			String sub = name.substring(name.indexOf('[')+1, name.length()-1);
+  			size = Integer.parseInt(sub);
+  			name = name.substring(0, name.indexOf('[')).trim();
+  		}
+  		
   	  ShaderVariable var =
   	    new ShaderVariable(programID,
-  	                       scanner.next(), qualifier, type, count);
+  	                       name, qualifier, type, vecSize, size);
   	  vars.put(var.name, var);
   	}
   }
@@ -475,5 +451,4 @@ public class Shader {
       scanner.next();
     }
   }
-  
 }

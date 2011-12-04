@@ -185,8 +185,8 @@ public class Example extends BasicGame{
 
     
     julia.startShader();
-      julia.setUniformFloatVariable("cX\0", cX/zoom + dx);
-      julia.setUniformFloatVariable("cY\0", cY/zoom + dy);
+      julia.setUniformFloatVariable("cX", cX/zoom + dx);
+      julia.setUniformFloatVariable("cY", cY/zoom + dy);
       GL11.glBegin(GL11.GL_QUADS);
         GL11.glTexCoord2f(-1.75f, 1.5f);
         GL11.glVertex3f(quad2[0],  quad2[1],  quad2[2]);

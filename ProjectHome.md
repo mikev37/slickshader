@@ -1,0 +1,1 @@
+The goal of this project is to provide a method for people to be able to take advantage of shaders when using the Slick API.  Specifically this pertains to GLSL as Slick is implemented on top of LWJGL
